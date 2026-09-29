@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>가족 발전방</title>
+<style>
+body{font-family:-apple-system,sans-serif;margin:0;padding:16px;background:#f3efe6;color:#2a241c}
+h1{font-size:1.2rem}
+.card{background:#fffdf8;border-radius:12px;padding:12px;margin:8px 0}
+.muted{color:#7a7064;font-size:.9rem}
+</style>
+</head>
+<body>
+<h1>가족 발전방</h1>
+<p class="muted">옛 accessagent 주소는 인증서가 만료되어 폰에서 막힙니다. 이 페이지는 family_v2 장부만 읽습니다.</p>
+<p id="st">장부 읽는 중…</p>
+<div id="out"></div>
+<script>
+const SB="https://oexwktlmvygubaminixn.supabase.co";
+const KEY="sb_publishable_-tNTDrUX6Y_u8jBraOyCVQ_HcKniWns";
+fetch(SB+"/rest/v1/odap_ledger?id=eq.family_v2&select=payload,updated_at",{
+  headers:{apikey:KEY,Authorization:"Bearer "+KEY}
+}).then(r=>r.json()).then(rows=>{
+  const el=document.getElementById("st");
+  const out=document.getElementById("out");
+  if(!rows||!rows[0]){el.textContent="family_v2 없음";return;}
+  const p=rows[0].payload||{};
+  const q=(p.questions||[]).length;
+  const n=(p.evalNames||[]).length;
+  const s=(p.schedules||[]).length;
+  const it=(p.items||[]).length;
+  el.textContent="질문 "+q+" · 명단 "+n+" · 일정 "+s+" · 오답 "+it;
+  const weather=p.weatherNote||"";
+  let html="<div class='card'><strong>날씨</strong><div>"+escapeHtml(weather)+"</div></div>";
+  html+="<div class='card'><strong>일정</strong>";
+  (p.schedules||[]).sort((a,b)=>String(a.date).localeCompare(b.date)).forEach(x=>{
+    html+="<div>"+escapeHtml((x.date||"")+" "+(x.time||"")+" "+(x.text||""))+"</div>";
+  });
+  html+="</div>";
+  out.innerHTML=html;
+}).catch(e=>{
+  document.getElementById("st").textContent="장부 읽기 실패: "+e;
+});
+function escapeHtml(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+</script>
+</body>
+</html>
